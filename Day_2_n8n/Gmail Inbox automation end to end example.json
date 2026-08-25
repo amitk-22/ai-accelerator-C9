@@ -1,0 +1,296 @@
+{
+  "name": "Gmail Inbox automation end to end example",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {
+          "includeSpamTrash": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -1824,
+        208
+      ],
+      "id": "9ac81f83-44d8-4a31-bf49-d399dd05b231",
+      "name": "Gmail Trigger",
+      "alwaysOutputData": false,
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "inputText": "=Subject- {{ $('Gmail Trigger').item.json.headers.subject }}\nBody- {{ $('Gmail Trigger').item.json.text }}",
+        "categories": {
+          "categories": [
+            {
+              "category": "Important Emails",
+              "description": "Any email which ask about project consultancy requests, mentoring requests, implementing AI strategies etc. should be classified in this category "
+            },
+            {
+              "category": "Newsletters ",
+              "description": "Any email which talks about product updates, news should be classified into this category"
+            },
+            {
+              "category": "Subscription related and billing related ",
+              "description": "Which is related to renewals, billing-related information should be classified to this category. "
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.textClassifier",
+      "typeVersion": 1.1,
+      "position": [
+        -1216,
+        176
+      ],
+      "id": "532a9de2-08b2-4788-9a48-3ddb2883d471",
+      "name": "Text Classifier"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-5-mini",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        -1216,
+        464
+      ],
+      "id": "5f5f6d67-308c-4fe9-a8ec-08c592eeae48",
+      "name": "OpenRouter Chat Model",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "messageId": "={{ $('Gmail Trigger').item.json.id }}"
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -768,
+        192
+      ],
+      "id": "c22b5649-0260-411e-a8b7-a992f9257d8a",
+      "name": "Delete a message",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $('Gmail Trigger').item.json.id }}",
+        "labelIds": [
+          "Label_1"
+        ]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -768,
+        0
+      ],
+      "id": "61be2c9c-52f8-4ad5-9fda-300ca99a423f",
+      "name": "Add label to message",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Subject- {{ $('Gmail Trigger').item.json.subject }}\nBody-{{ $('Gmail Trigger').item.json.text }}",
+        "options": {
+          "systemMessage": "=You are an expert email writer who have written for the brands like Mckinsey.\n\nContext:\n* Company name: Tech Wizards\n* Services: Technology consulting and project execution\n* Availability: 7–8 PM and 8–9 PM IST, Monday to Friday\n\nTask:\nDraft a reply to the given email or message.\n\nGuidelines:\n* Tone: Friendly, professional, and precise\n* Keep the response concise and clear\n* Naturally incorporate the company’s services when relevant\n* Offer the available time slots when scheduling is needed\n* Do not include a subject line\n* Do not use em-dashes\n* End the email with: Thanks & Reagrds,\nTech Wizards\n\nOutput:\nA well-structured email reply following the above guidelines."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -464,
+        0
+      ],
+      "id": "3e3c5735-1799-4b4a-a179-15ea9563397f",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        -464,
+        224
+      ],
+      "id": "a6413d93-8d8d-4781-a9f5-bf938f42bdae",
+      "name": "OpenRouter Chat Model1",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "resource": "draft",
+        "subject": "={{ $('Gmail Trigger').item.json.subject }}",
+        "message": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -112,
+        0
+      ],
+      "id": "ebc050f1-e40c-4211-923c-da1a4b3d22db",
+      "name": "Create a draft1",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.From }} {{ $json.Subject }}",
+        "guardrails": {
+          "jailbreak": {
+            "value": {
+              "threshold": 0.7,
+              "customizePrompt": true
+            }
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.guardrails",
+      "typeVersion": 2,
+      "position": [
+        -1584,
+        208
+      ],
+      "id": "5755369c-0042-4b8e-84fe-05000ae72007",
+      "name": "Guardrails"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        -1584,
+        416
+      ],
+      "id": "9d650dd9-0e71-4bc3-910b-5f6b4c06d25b",
+      "name": "OpenRouter Chat Model2",
+      "credentials": {}
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Guardrails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Text Classifier",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Text Classifier": {
+      "main": [
+        [
+          {
+            "node": "Add label to message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Delete a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add label to message": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Create a draft1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guardrails": {
+      "main": [
+        [
+          {
+            "node": "Text Classifier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Guardrails",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  }
+}

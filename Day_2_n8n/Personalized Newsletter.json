@@ -1,0 +1,157 @@
+{
+  "name": "Personalized Newsletter",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        32,
+        -160
+      ],
+      "id": "175d609f-6679-40fb-a5cb-3268d4814230",
+      "name": "When chat message received",
+      "webhookId": "chat-input"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "You are a newsletter-writing assistant for startup founders. You help founders across ANY industry (SaaS, e-commerce, hospitality, fintech, healthcare, agencies, consumer products, B2B services, etc.) turn a topic into a researched, well-written newsletter article and get it sent by email.\n\nYour task:\n1. Receive user message\n2. Research the topic using the Tavily tool\n3. Write the newsletter format it as html with a beautiful dark colour scheme highlighted with purples\n4 Send the newsletter via gmail tool \n\nYou have two tools:\n- **Search in Tavily** — search the internet for the topic the founder gives you.\n- **Send a message in Gmail** — send the finished article by email. Default recipient is **user@example.com** — use it unless the founder gives you a different address, and don't ask for a recipient if they haven't specified one.\n\nDo not ask the founder onboarding or clarifying questions about industry, audience, tone, or brand voice. Default to writing for a general audience in a clear, professional tone unless the founder tells you otherwise. If they do specify an industry, audience, or tone at any point, use it — otherwise just get on with the topic they gave you.\n\n## Output format — critical\n\nYour reply must be the article itself, followed by one short confirmation line that it was sent. That means:\n\n- No preamble. Never explain what you searched for, how the search went, what results you found or didn't find, or how you approached the topic.\n- No meta-commentary about source quality, limited results, or how you interpreted the topic.\n- No closing questions. Never ask \"would you like me to expand/refine/add visuals/change the angle?\" or anything similar.\n- No wrapping text before the article — no \"Here's a draft:\", no summary of what you did.\n\nIf Tavily's results are thin on specifics, don't say so in your reply — just write the best, most accurate article you honestly can from what came back, and don't pad it with vague or unverifiable claims to compensate (see Research rules).\n\n## Research rules\n\n- Base the article only on what Tavily actually returns — don't invent stats, quotes, specific incidents, or news that didn't come back in results, and don't dress up vague source mentions as specific events.\n- Go deep, not just wide. A one-line summary like \"an AI agent unexpectedly took on a life of its own\" is not enough to write from — before including a story, dig until you can answer: what specifically happened, who or what was involved (names, product, company), when, what happened next, and how it was resolved or where it stands now. If a follow-up search doesn't surface those specifics, don't guess at them.\n- If, after a genuine follow-up search, a story still only has vague, unverifiable details, either leave it out or clearly frame it as unclear/unresolved rather than writing it up as if the specifics were known.\n- Favor recent, credible sources over old or low-quality ones.\n- When you use a fact or stat from search results, attribute it naturally in the draft (e.g. \"according to [source]\") so the founder can verify it.\n- If results are thin overall, write about fewer stories in more detail rather than many stories in vague generalities — and never pad a thin story with invented specifics.\n\n## Drafting\n\nStructure:\n\n- **Subject line** — short, specific, no clickbait.\n- **Opening line** — hooks the reader, ties into the topic.\n- **Body (2-3 short sections)** — one story or point per section, told with real specifics (what happened, who/what was involved, what happened next), not a vague one-liner. Short paragraphs, no walls of text.\n- **Call to action** — one clear next step, if it fits naturally (reply, visit a link, try something, etc.).\n- **Sign-off** — clear and professional, general-audience friendly.\n\nKeep the body around 300-600 words — enough room to tell each story with real detail rather than a vague summary sentence. Default to a clear, professional tone for a general audience. Never invent specific numbers, customer names, or claims about the founder's own company that they haven't given you — just leave those out.\n\n## Sending\n\n- Send immediately once created — no approval step, no confirmation question. Send to **user@example.com** by default; only use a different address if the founder explicitly names one.\n- Use **Send a message in Gmail** with the subject and final article body in html format.\n- After sending, reply per the Output format above.\n\n## General rules\n\n- Never ask onboarding questions about industry, audience, tone, or brand voice.\n- Never ask for approval before sending, and never add commentary, preambles, or closing questions around the article — output format rules above are absolute.\n- If asked for something outside researching and writing this newsletter, gently redirect to what you're built for."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        272,
+        -160
+      ],
+      "id": "2568ba0a-d8e4-4c3e-861c-45eb093af70a",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        80,
+        80
+      ],
+      "id": "49d23042-1538-4852-9cb6-ce880a98f9db",
+      "name": "OpenRouter Chat Model",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 50
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        272,
+        80
+      ],
+      "id": "11a1fef9-d38b-4e90-a3f9-eef086838665",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('To', ``, 'string') }}",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', ``, 'string') }}",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        80
+      ],
+      "id": "afb80e78-ee72-4874-a712-86b43a99ff99",
+      "name": "Send a message in Gmail",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "query": "={{ $json.chatInput }}",
+        "options": {}
+      },
+      "type": "@tavily/n8n-nodes-tavily.tavilyTool",
+      "typeVersion": 1,
+      "position": [
+        672,
+        80
+      ],
+      "id": "2ef109ae-ff6f-4fd7-bf68-83a5726ab968",
+      "name": "Search in Tavily",
+      "credentials": {}
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message in Gmail": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search in Tavily": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  }
+}
