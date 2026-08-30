@@ -1,6 +1,6 @@
-# Day 6 Session 2 - RAG Assignments
+# Day 7 - RAG Assignments
 
-This directory contains assignments for Day 6 Session 2, focusing on building RAG (Retrieval-Augmented Generation) systems with LlamaIndex.
+This directory contains assignments for Day 7, focusing on building RAG (Retrieval-Augmented Generation) systems with LlamaIndex.
 
 ## Assignment 1: Vector Database Creation and Retrieval
 
